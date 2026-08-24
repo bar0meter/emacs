@@ -1,0 +1,8 @@
+# Emacs-generated packages, caches, and session state
+auto-save-list/
+eln-cache/
+elpa/
+tree-sitter/
+history
+projects
+recentf
