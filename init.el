@@ -42,7 +42,7 @@
               tab-width 4
               fill-column 80)
 
-(add-to-list 'default-frame-alist '(font . "JetBrains Mono-16"))
+(add-to-list 'default-frame-alist '(font . "JetBrains Mono-15"))
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
 (tool-bar-mode -1)
@@ -333,7 +333,7 @@
     :name "leader"
     "<escape>" #'keyboard-quit
     "b" #'consult-buffer
-    "l" #'find-file
+    "l" #'project-find-file
     "w" #'kill-current-buffer
     "h" #'eglot-inlay-hints-mode
     "k" #'flymake-show-diagnostic
