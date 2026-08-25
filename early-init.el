@@ -1,3 +1,5 @@
+;;; early-init.el --- Early Emacs setup -*- lexical-binding: t; -*-
+
 ;; GUI Emacs inherits a minimal environment, so libgccjit's gcc driver
 ;; can't find its runtime libs (ld: library 'emutls_w' not found).
 ;; Point LIBRARY_PATH at Homebrew's gcc before any native compilation runs.

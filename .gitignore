@@ -3,6 +3,7 @@ auto-save-list/
 eln-cache/
 elpa/
 tree-sitter/
+transient/
 history
 projects
 recentf

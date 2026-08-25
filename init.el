@@ -1,3 +1,5 @@
+;;; init.el --- Personal Emacs configuration -*- lexical-binding: t; -*-
+
 ;; Package setup must happen before loading external packages.
 (require 'package)
 
@@ -36,7 +38,9 @@
       require-final-newline t
       kill-do-not-save-duplicates t
       compilation-scroll-output t
-      compilation-auto-jump-to-first-error t)
+      compilation-auto-jump-to-first-error t
+      ;; After selecting a project, immediately search its files.
+      project-switch-commands 'project-find-file)
 
 (setq-default indent-tabs-mode nil
               tab-width 4
@@ -71,6 +75,8 @@
 ;; Evil
 (use-package evil
   :ensure t
+  :init
+  (setq evil-want-keybinding nil)
   :config
   (evil-mode 1))
 
@@ -82,6 +88,15 @@
   (evil-escape-key-sequence "jk")
   :config
   (evil-escape-mode +1))
+
+(use-package evil-collection
+  :ensure t
+  :after evil
+  :custom
+  ;; Add Vim bindings only where requested.
+  (evil-collection-mode-list '(magit))
+  :config
+  (evil-collection-init))
 
 (defun open-line-below ()
   "Open a new line below the current line."
@@ -135,6 +150,19 @@
 
 (use-package vertico
   :ensure t
+  :bind
+  (:map vertico-map
+        ("C-n" . vertico-next)
+        ("C-p" . vertico-previous)
+        ("C-a" . beginning-of-line)
+        ("C-e" . end-of-line)
+        ("M-b" . backward-word)
+        ("M-f" . forward-word)
+        ("M-<backspace>" . backward-kill-word)
+        ("M-d" . kill-word)
+        ("C-d" . delete-char)
+        ("C-k" . kill-line)
+        ("C-u" . delete-minibuffer-contents))
   :init
   (vertico-mode))
 
