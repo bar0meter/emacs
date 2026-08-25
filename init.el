@@ -68,6 +68,7 @@
 (global-set-key (kbd "C-c x") #'execute-extended-command)
 (global-set-key (kbd "M-X") #'execute-extended-command)
 (global-set-key (kbd "s-<backspace>") #'backward-kill-word)
+
 (windmove-default-keybindings 'control)
 
 ;; Evil
