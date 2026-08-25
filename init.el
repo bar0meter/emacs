@@ -38,9 +38,7 @@
       require-final-newline t
       kill-do-not-save-duplicates t
       compilation-scroll-output t
-      compilation-auto-jump-to-first-error t
-      ;; After selecting a project, immediately search its files.
-      project-switch-commands 'project-find-file)
+      compilation-auto-jump-to-first-error t)
 
 (setq-default indent-tabs-mode nil
               tab-width 4
@@ -145,6 +143,13 @@
 (global-set-key [remap move-beginning-of-line]
                 #'move-beginning-of-line-smart)
 
+(defun switch-project-directory ()
+  "Use another known project as the current buffer's directory."
+  (interactive)
+  (setq default-directory
+        (file-name-as-directory (project-prompt-project-dir)))
+  (message "Switched project to %s" (abbreviate-file-name default-directory)))
+
 (use-package diminish
   :ensure t)
 
@@ -228,7 +233,7 @@
     ("g" project-find-regexp "find regexp")
     ("d" project-dired "dired")
     ("b" project-switch-to-buffer "switch buffer")
-    ("p" project-switch-project "switch project")
+    ("p" switch-project-directory "switch project")
     ("k" project-kill-buffers "kill buffers")
     ("c" project-compile "compile")
     ("e" project-eshell "eshell")
@@ -371,7 +376,7 @@
           "r" #'eglot-format-buffer)
     "p" (define-keymap
           :name "project"
-          "p" #'project-switch-project
+          "p" #'switch-project-directory
           "f" #'project-find-file
           "g" #'project-find-regexp
           "b" #'project-switch-to-buffer
