@@ -7,3 +7,5 @@ transient/
 history
 projects
 recentf
+
+.mc-lists.el

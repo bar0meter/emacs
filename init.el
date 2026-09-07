@@ -38,7 +38,8 @@
       require-final-newline t
       kill-do-not-save-duplicates t
       compilation-scroll-output t
-      compilation-auto-jump-to-first-error t)
+      compilation-auto-jump-to-first-error t
+      auto-save-visited-interval 15)
 
 (setq-default indent-tabs-mode nil
               tab-width 4
@@ -58,11 +59,30 @@
 (global-auto-revert-mode +1)
 (savehist-mode +1)
 (column-number-mode +1)
+;; Protect Emacs from generated or minified files with very long lines.
+(global-so-long-mode +1)
 ;; Show available commands after typing a prefix key.
 (which-key-mode +1)
 
 (add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
 (add-hook 'before-save-hook #'delete-trailing-whitespace)
+
+(defconst my-large-file-threshold (* 256 1024))
+
+(defun my-optimize-large-file ()
+  "Disable continuous background work in large buffers."
+  (when (> (buffer-size) my-large-file-threshold)
+    (setq-local auto-save-visited-mode nil)
+    (when (bound-and-true-p breadcrumb-local-mode)
+      (breadcrumb-local-mode -1))
+    (when (bound-and-true-p diff-hl-mode)
+      (diff-hl-mode -1))
+    (when (bound-and-true-p corfu-mode)
+      (corfu-mode -1))
+    (when (bound-and-true-p yas-minor-mode)
+      (yas-minor-mode -1))))
+
+(add-hook 'find-file-hook #'my-optimize-large-file)
 
 ;; Keep M-x available because Command-x is used for cutting text.
 (global-set-key (kbd "C-c x") #'execute-extended-command)
@@ -77,7 +97,10 @@
   :init
   (setq evil-want-keybinding nil)
   :config
-  (evil-mode 1))
+  (evil-mode 1)
+  ;; Paste the latest yank or clipboard text into / searches.
+  (define-key evil-ex-search-keymap (kbd "C-y") #'yank)
+  (define-key evil-ex-search-keymap (kbd "M-v") #'yank))
 
 (use-package evil-escape
   :ensure t
@@ -96,6 +119,15 @@
   (evil-collection-mode-list '(magit))
   :config
   (evil-collection-init))
+
+(use-package better-jumper
+  :ensure t
+  :after evil
+  :config
+  (better-jumper-mode +1)
+  (with-eval-after-load 'xref
+    (advice-add #'xref-push-marker-stack :override
+                #'better-jumper-set-jump)))
 
 (defun open-line-below ()
   "Open a new line below the current line."
@@ -304,12 +336,15 @@
   (magit-diff-specify-hunk-foreground nil)
   (magit-diff-use-indicator-faces t))
 
+(use-package git-link
+  :ensure t
+  :commands (git-link git-link-commit))
+
 (use-package diff-hl
   :ensure t
   :init
   (global-diff-hl-mode)
   :config
-  (diff-hl-flydiff-mode)
   (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh))
 
 (use-package multiple-cursors
@@ -321,13 +356,6 @@
 (use-package zenburn-theme
   :ensure t)
 
-(use-package super-save
-  :ensure t
-  :demand t
-  :config
-  (super-save-mode +1)
-  (diminish 'super-save-mode))
-
 (use-package yasnippet
   :ensure t
   :demand t
@@ -337,6 +365,9 @@
 
 (use-package eglot
   :ensure nil
+  :init
+  ;; Large monorepos otherwise exhaust macOS GUI file descriptors.
+  (setq eglot-max-file-watches 0)
   :hook
   ((sh-mode bash-ts-mode
             go-mode go-ts-mode go-mod-ts-mode
@@ -392,7 +423,9 @@
           "r" #'consult-recent-file)
     "g" (define-keymap
           :name "git"
-          "g" #'magit-status)
+          "g" #'magit-status
+          "l" #'git-link
+          "c" #'git-link-commit)
     "r" (define-keymap
           :name "refactor"
           "n" #'eglot-rename)
@@ -412,6 +445,8 @@
   (kbd "gD") #'xref-find-definitions-other-window
   (kbd "gI") #'eglot-find-implementation
   (kbd "gr") #'xref-find-references
+  (kbd "C-o") #'better-jumper-jump-backward
+  (kbd "C-i") #'better-jumper-jump-forward
   (kbd "K") #'eldoc-doc-buffer
   (kbd "C-p") #'evil-previous-line
   (kbd "C-n") #'evil-next-line
@@ -449,7 +484,7 @@
    '("f64217e4490453cac52044afb625f71a7f034f109f4bd1ed7153768a9688701c" default))
  '(package-selected-packages
    '(consult corfu devil diff-hl diminish evil hydra magit multiple-cursors
-             orderless super-save vertico yasnippet zenburn-theme)))
+             orderless org super-save vertico yasnippet zenburn-theme)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
