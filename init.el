@@ -13,6 +13,7 @@
 
 ;; Emacs 29+ includes use-package.
 (require 'use-package)
+(require 'project)
 
 ;; GUI Emacs does not inherit the shell paths managed by mise.
 (dolist (dir (list "/opt/homebrew/bin"
@@ -73,14 +74,8 @@
   "Disable continuous background work in large buffers."
   (when (> (buffer-size) my-large-file-threshold)
     (setq-local auto-save-visited-mode nil)
-    (when (bound-and-true-p breadcrumb-local-mode)
-      (breadcrumb-local-mode -1))
-    (when (bound-and-true-p diff-hl-mode)
-      (diff-hl-mode -1))
     (when (bound-and-true-p corfu-mode)
-      (corfu-mode -1))
-    (when (bound-and-true-p yas-minor-mode)
-      (yas-minor-mode -1))))
+      (corfu-mode -1))))
 
 (add-hook 'find-file-hook #'my-optimize-large-file)
 
@@ -119,15 +114,6 @@
   (evil-collection-mode-list '(magit))
   :config
   (evil-collection-init))
-
-(use-package better-jumper
-  :ensure t
-  :after evil
-  :config
-  (better-jumper-mode +1)
-  (with-eval-after-load 'xref
-    (advice-add #'xref-push-marker-stack :override
-                #'better-jumper-set-jump)))
 
 (defun open-line-below ()
   "Open a new line below the current line."
@@ -183,9 +169,6 @@
         (file-name-as-directory (project-prompt-project-dir)))
   (message "Switched project to %s" (abbreviate-file-name default-directory)))
 
-(use-package diminish
-  :ensure t)
-
 (use-package vertico
   :ensure t
   :bind
@@ -209,16 +192,10 @@
   :custom
   (completion-styles '(orderless basic)))
 
-(use-package marginalia
-  :ensure t
-  :init
-  ;; Add useful descriptions to minibuffer candidates.
-  (marginalia-mode))
-
 (use-package embark
   :ensure t
   :bind
-  ;; Run actions appropriate for the item at point.
+  ;; Act on the current completion candidate.
   ("C-." . embark-act)
   :init
   (setq prefix-help-command #'embark-prefix-help-command))
@@ -226,55 +203,8 @@
 (use-package embark-consult
   :ensure t
   :hook
-  ;; Preview candidates collected by Embark.
+  ;; Preview Consult results collected by Embark.
   (embark-collect-mode . consult-preview-at-point-mode))
-
-(use-package avy
-  :ensure t
-  :bind
-  ;; Jump directly to a visible word.
-  ("s-." . avy-goto-word-1))
-
-(use-package expand-region
-  :ensure t
-  :bind
-  ;; Expand the selection by syntactic units.
-  ("s-d" . er/expand-region))
-
-(use-package crux
-  :ensure t
-  :bind
-  ("C-c k" . crux-kill-other-buffers))
-
-(use-package devil
-  :ensure t
-  :demand t
-  :config
-  (diminish 'devil-mode)
-  (add-to-list 'devil-translations '(", m x" . "C-c x"))
-  (add-to-list 'devil-translations '(", ." . "M-."))
-  (add-to-list 'devil-translations '(", >" . "C-x 4 ."))
-  (add-to-list 'devil-repeatable-keys '("%k x `"))
-  (global-set-key (kbd "C-2") #'recompile)
-  (global-devil-mode 1))
-
-(use-package hydra
-  :ensure t
-  :config
-  (defhydra project-hydra (:color teal)
-    ("f" project-find-file "find file")
-    ("g" project-find-regexp "find regexp")
-    ("d" project-dired "dired")
-    ("b" project-switch-to-buffer "switch buffer")
-    ("p" switch-project-directory "switch project")
-    ("k" project-kill-buffers "kill buffers")
-    ("c" project-compile "compile")
-    ("e" project-eshell "eshell")
-    ("v" project-vc-dir "vc dir")
-    ("x" project-shell-command "shell command")
-    ("X" project-async-shell-command "async shell command"))
-
-  (global-set-key (kbd "C-x p") #'project-hydra/body))
 
 (use-package corfu
   :ensure t
@@ -303,16 +233,11 @@
   (treesit-auto-install 'prompt)
   ;; Limit grammar management to the languages used by this setup.
   (treesit-auto-langs
-   '(bash go gomod gowork javascript json lua rust tsx typescript yaml zig))
+   '(bash dockerfile go gomod gowork javascript json lua rust tsx typescript yaml zig))
   :config
   ;; Register only modes whose grammars are already installed.  The global
   ;; mode checks every grammar whenever a file opens and is noticeably slow.
   (treesit-auto-add-to-auto-mode-alist))
-
-(use-package breadcrumb
-  :ensure t
-  :config
-  (breadcrumb-mode +1))
 
 (use-package rust-mode
   :ensure t)
@@ -320,13 +245,6 @@
 (use-package zig-ts-mode
   :ensure t
   :mode "\\.zig\\'")
-
-(use-package jinx
-  :ensure t
-  ;; Installed but not enabled globally: this Emacs bundle and Homebrew
-  ;; Enchant load duplicate GLib runtimes on macOS.
-  :commands
-  (jinx-mode jinx-correct))
 
 (use-package magit
   :ensure t
@@ -336,32 +254,10 @@
   (magit-diff-specify-hunk-foreground nil)
   (magit-diff-use-indicator-faces t))
 
-(use-package git-link
-  :ensure t
-  :commands (git-link git-link-commit))
-
-(use-package diff-hl
-  :ensure t
-  :init
-  (global-diff-hl-mode)
-  :config
-  (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh))
-
-(use-package multiple-cursors
-  :ensure t
-  :demand t
-  :config
-  (global-set-key (kbd "M-d") #'mc/mark-next-like-this-word))
-
 (use-package zenburn-theme
-  :ensure t)
-
-(use-package yasnippet
   :ensure t
-  :demand t
   :config
-  (yas-global-mode +1)
-  (diminish 'yasnippet-mode))
+  (load-theme 'zenburn t))
 
 (use-package eglot
   :ensure nil
@@ -423,9 +319,7 @@
           "r" #'consult-recent-file)
     "g" (define-keymap
           :name "git"
-          "g" #'magit-status
-          "l" #'git-link
-          "c" #'git-link-commit)
+          "g" #'magit-status)
     "r" (define-keymap
           :name "refactor"
           "n" #'eglot-rename)
@@ -441,12 +335,11 @@
 
 (evil-define-key 'normal 'global
   (kbd ",") my-leader-map
-  (kbd "gd") #'xref-find-definitions
+  ;; Use Evil's definition command so the location is added to its jump list.
+  (kbd "gd") #'evil-goto-definition
   (kbd "gD") #'xref-find-definitions-other-window
   (kbd "gI") #'eglot-find-implementation
   (kbd "gr") #'xref-find-references
-  (kbd "C-o") #'better-jumper-jump-backward
-  (kbd "C-i") #'better-jumper-jump-forward
   (kbd "K") #'eldoc-doc-buffer
   (kbd "C-p") #'evil-previous-line
   (kbd "C-n") #'evil-next-line
@@ -459,32 +352,16 @@
   (interactive)
   (find-file user-init-file))
 
-(defun switch-to-theme (theme)
-  "Disable all enabled themes and load THEME."
-  (interactive
-   (list
-    (intern
-     (completing-read
-      "Theme: "
-      (mapcar #'symbol-name (custom-available-themes))
-      nil t))))
-
-  (mapc #'disable-theme custom-enabled-themes)
-  (load-theme theme t))
-
-(switch-to-theme 'zenburn)
-
 (put 'dired-find-alternate-file 'disabled nil)
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   '("f64217e4490453cac52044afb625f71a7f034f109f4bd1ed7153768a9688701c" default))
  '(package-selected-packages
-   '(consult corfu devil diff-hl diminish evil hydra magit multiple-cursors
-             orderless org super-save vertico yasnippet zenburn-theme)))
+   '(consult corfu deadgrep embark embark-consult evil evil-collection
+             evil-escape magit orderless rust-mode treesit-auto vertico
+             zenburn-theme zig-ts-mode)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
