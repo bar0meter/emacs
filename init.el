@@ -187,6 +187,11 @@
   :init
   (vertico-mode))
 
+(use-package marginalia
+  :ensure t
+  :config
+  (marginalia-mode))
+
 (use-package orderless
   :ensure t
   :custom
@@ -226,6 +231,23 @@
   :bind
   ("C-S-s" . deadgrep))
 
+(use-package avy
+  :ensure t
+  :bind
+  ("s-." . avy-goto-word-1))
+
+(use-package dired-subtree
+  :ensure t
+  :after dired
+  :custom
+  (dired-subtree-use-backgrounds nil)
+  :init
+  (evil-define-key 'normal dired-mode-map
+    (kbd "TAB") #'dired-subtree-toggle)
+  :bind
+  (:map dired-mode-map
+        ("TAB" . dired-subtree-toggle)))
+
 (use-package treesit-auto
   :ensure t
   :custom
@@ -253,6 +275,13 @@
   (magit-diff-fontify-hunk 'all)
   (magit-diff-specify-hunk-foreground nil)
   (magit-diff-use-indicator-faces t))
+
+(use-package diff-hl
+  :ensure t
+  :hook
+  (magit-post-refresh . diff-hl-magit-post-refresh)
+  :init
+  (global-diff-hl-mode))
 
 (use-package zenburn-theme
   :ensure t
@@ -359,9 +388,9 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(consult corfu deadgrep embark embark-consult evil evil-collection
-             evil-escape magit orderless rust-mode treesit-auto vertico
-             zenburn-theme zig-ts-mode)))
+   '(avy consult corfu deadgrep diff-hl dired-subtree embark embark-consult
+         evil evil-collection evil-escape magit marginalia orderless rust-mode
+         treesit-auto vertico zenburn-theme zig-ts-mode)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
